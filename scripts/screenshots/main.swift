@@ -127,4 +127,16 @@ render(Desktop(size: CGSize(width: 1280, height: 300)) { drawer(.peek(store.remi
        size: CGSize(width: 1280, height: 300), name: "reminder.png")
 render(Desktop(size: CGSize(width: 1280, height: 200)) { drawer(.closed, store: store) },
        size: CGSize(width: 1280, height: 200), name: "closed.png")
+// Edit mode: one row being edited (custom 45 min timing), one normal row.
+let editStore = demoStore()
+let editC = NotchController(previewStore: editStore, mode: .open, notchSize: notch)
+render(VStack(spacing: 4) {
+        ReminderRow(reminder: editStore.reminders[2], startEditing: true)
+        ReminderRow(reminder: editStore.reminders[1])
+    }
+    .padding(10)
+    .frame(width: NotchController.openSize.width)
+    .background(RoundedRectangle(cornerRadius: 26).fill(Color.black))
+    .environmentObject(editC).environmentObject(editStore).environment(\.colorScheme, .dark),
+    size: CGSize(width: 480, height: 190), name: "editing.png")
 render(AppIcon(), size: CGSize(width: 1024, height: 1024), name: "icon-1024.png")

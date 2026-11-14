@@ -40,10 +40,15 @@ NotchNudge lives in space you already ignore, the notch, so it never takes up ro
 
 ## Features
 
+<div align="center">
+<img src="docs/images/editing.png" alt="Editing a reminder: change its text and pick a preset or custom timing" width="480">
+</div>
+
 | | |
 | --- | --- |
 | **Lives in the notch** | Hover over the notch and the drawer slides open. Move away and it closes. No Dock icon, no windows. |
-| **Repeating reminders** | Every 1, 5, 15, or 30 minutes, or every 1 or 2 hours. Each one keeps its own schedule. |
+| **Repeating reminders** | Every 1, 5, 15, or 30 minutes, every 1 or 2 hours, or any custom number of minutes. Each one keeps its own schedule. |
+| **Edit anytime** | Double-click a reminder (or click the pencil) to change its words or how often it repeats. |
 | **Pops down on time** | When a reminder is due, a card drops from the notch with a soft chime. It hides itself after 12 seconds, and hovering keeps it open. |
 | **Got it or Snooze** | Dismiss it until next time, or snooze it for 10 minutes. |
 | **See what's coming** | A small ring on every reminder fills up as its next nudge gets closer. |
@@ -108,6 +113,8 @@ flowchart LR
 | --- | --- |
 | Open the drawer | Hover over the notch, or press <kbd>Control</kbd> + <kbd>Option</kbd> + <kbd>N</kbd> |
 | Add a reminder | Type it, choose how often, press <kbd>Return</kbd> |
+| Edit one (words or timing) | Double-click it, or hover and click the pencil. Change it, then click **Done** |
+| Pick any timing | Click **Custom** and type the number of minutes (1 to 1440) |
 | Show, pause, or delete one | Hover over the reminder and use the buttons on the right |
 | Pause everything | Click the bell in the top right of the drawer, or use the menu bar icon |
 | Close the drawer | Move your mouse away, click anywhere else, or press <kbd>Esc</kbd> |

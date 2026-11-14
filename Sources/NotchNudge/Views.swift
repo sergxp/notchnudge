@@ -151,19 +151,7 @@ struct DrawerView: View {
                 .strokeBorder(focused ? AnyShapeStyle(Theme.accent.opacity(0.7)) : AnyShapeStyle(Color.clear), lineWidth: 1))
             .animation(.easeOut(duration: 0.15), value: draft.isEmpty)
 
-            HStack(spacing: 6) {
-                Text("Every").font(.system(size: 12, weight: .medium, design: .rounded)).foregroundStyle(Theme.dim)
-                ForEach(intervalPresets, id: \.1) { label, secs in
-                    Button { withAnimation(.easeOut(duration: 0.15)) { interval = secs } } label: {
-                        Text(label)
-                            .font(.system(size: 12, weight: .semibold, design: .rounded))
-                            .padding(.horizontal, 10).padding(.vertical, 4)
-                            .background(Capsule().fill(interval == secs ? AnyShapeStyle(Theme.accent) : AnyShapeStyle(Theme.field)))
-                            .foregroundStyle(interval == secs ? .white : Theme.dim)
-                    }
-                    .buttonStyle(.plain)
-                }
-            }
+            IntervalPicker(interval: $interval)
         }
         .padding(.horizontal, 18)
     }
@@ -218,13 +206,37 @@ struct ReminderRow: View {
     @EnvironmentObject var store: ReminderStore
     let reminder: Reminder
     @State private var hovering = false
+    @State private var editing = false
+    @State private var draftText = ""
+    @State private var draftInterval: TimeInterval = 1800
+    @FocusState private var textFocused: Bool
+
+    init(reminder: Reminder, startEditing: Bool = false) {
+        self.reminder = reminder
+        _editing = State(initialValue: startEditing)
+        _draftText = State(initialValue: reminder.text)
+        _draftInterval = State(initialValue: reminder.interval)
+    }
 
     var body: some View {
+        Group {
+            if editing { editor } else { display }
+        }
+        .padding(.horizontal, 10).padding(.vertical, 8)
+        .background(RoundedRectangle(cornerRadius: 10, style: .continuous)
+            .fill(editing ? Color.white.opacity(0.08) : hovering ? Color.white.opacity(0.06) : .clear))
+        .contentShape(Rectangle())
+        .onHover { h in withAnimation(.easeOut(duration: 0.12)) { hovering = h } }
+    }
+
+    // MARK: Normal row
+
+    private var display: some View {
         let remaining = reminder.nextFire.timeIntervalSince(store.now)
         let inactive = reminder.isPaused || store.allPaused
         let progress = inactive ? 0 : 1 - max(0, min(1, remaining / reminder.interval))
 
-        HStack(spacing: 12) {
+        return HStack(spacing: 12) {
             ProgressRing(progress: progress, paused: inactive).frame(width: 20, height: 20)
             VStack(alignment: .leading, spacing: 3) {
                 Text(reminder.text)
@@ -237,9 +249,13 @@ struct ReminderRow: View {
                     .foregroundStyle(Theme.faint)
                     .monospacedDigit()
             }
+            .contentShape(Rectangle())
+            .onTapGesture(count: 2) { startEditing() }
+            .help("Double-click to edit")
             Spacer(minLength: 8)
             if hovering {
                 HStack(spacing: 4) {
+                    iconButton("pencil", help: "Edit text and timing") { startEditing() }
                     iconButton("eye", help: "Show now") { c.showNow(reminder.id) }
                     iconButton(reminder.isPaused ? "play.fill" : "pause.fill", help: reminder.isPaused ? "Resume" : "Pause") {
                         store.togglePause(reminder.id)
@@ -251,10 +267,58 @@ struct ReminderRow: View {
                 .transition(.opacity)
             }
         }
-        .padding(.horizontal, 10).padding(.vertical, 8)
-        .background(RoundedRectangle(cornerRadius: 10, style: .continuous).fill(hovering ? Color.white.opacity(0.06) : .clear))
-        .contentShape(Rectangle())
-        .onHover { h in withAnimation(.easeOut(duration: 0.12)) { hovering = h } }
+    }
+
+    // MARK: Edit mode
+
+    private var editor: some View {
+        VStack(alignment: .leading, spacing: 10) {
+            TextField("", text: $draftText, prompt: Text("Reminder text").foregroundColor(Theme.faint))
+                .textFieldStyle(.plain)
+                .font(.system(size: 14, weight: .medium, design: .rounded))
+                .foregroundStyle(.white)
+                .focused($textFocused)
+                .onSubmit(save)
+                .padding(.horizontal, 10)
+                .frame(height: 32)
+                .background(RoundedRectangle(cornerRadius: 8, style: .continuous).fill(Theme.field))
+                .overlay(RoundedRectangle(cornerRadius: 8, style: .continuous).strokeBorder(Theme.accent.opacity(0.7), lineWidth: 1))
+
+            IntervalPicker(interval: $draftInterval)
+
+            HStack(spacing: 8) {
+                Spacer()
+                Button { withAnimation(.easeOut(duration: 0.15)) { editing = false } } label: {
+                    Text("Cancel").font(.system(size: 12, weight: .semibold, design: .rounded))
+                        .padding(.horizontal, 14).padding(.vertical, 5)
+                        .background(Capsule().fill(Theme.field))
+                        .foregroundStyle(Theme.dim)
+                }.buttonStyle(.plain)
+                Button(action: save) {
+                    Text("Done").font(.system(size: 12, weight: .bold, design: .rounded))
+                        .padding(.horizontal, 16).padding(.vertical, 5)
+                        .background(Capsule().fill(Theme.accent))
+                        .foregroundStyle(.white)
+                }.buttonStyle(.plain)
+            }
+        }
+    }
+
+    private func startEditing() {
+        draftText = reminder.text
+        draftInterval = reminder.interval
+        withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { editing = true }
+        DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { textFocused = true }
+    }
+
+    private func save() {
+        if draftText.trimmingCharacters(in: .whitespacesAndNewlines) != reminder.text {
+            store.rename(reminder.id, to: draftText)
+        }
+        if draftInterval != reminder.interval {
+            store.setInterval(reminder.id, draftInterval)
+        }
+        withAnimation(.easeOut(duration: 0.15)) { editing = false }
     }
 
     private func iconButton(_ name: String, help: String, action: @escaping () -> Void) -> some View {
@@ -267,6 +331,65 @@ struct ReminderRow: View {
         }
         .buttonStyle(.plain)
         .help(help)
+    }
+}
+
+/// "Every 1m 5m 15m 30m 1h 2h Custom [__] min" - used when adding and when editing.
+struct IntervalPicker: View {
+    @Binding var interval: TimeInterval
+    @State private var customOn = false
+    @State private var minutesText = ""
+
+    private var isPreset: Bool { intervalPresets.contains { $0.1 == interval } }
+
+    var body: some View {
+        HStack(spacing: 5) {
+            Text("Every").font(.system(size: 12, weight: .medium, design: .rounded)).foregroundStyle(Theme.dim)
+            ForEach(intervalPresets, id: \.1) { label, secs in
+                chip(label, selected: !customOn && interval == secs) {
+                    customOn = false
+                    interval = secs
+                }
+            }
+            chip(customOn || isPreset ? "Custom" : shortDuration(interval), selected: customOn || !isPreset) {
+                customOn = true
+                minutesText = "\(Int(interval / 60))"
+            }
+            if customOn {
+                TextField("", text: $minutesText, prompt: Text("min").foregroundColor(Theme.faint))
+                    .textFieldStyle(.plain)
+                    .font(.system(size: 12, weight: .semibold, design: .rounded))
+                    .multilineTextAlignment(.center)
+                    .foregroundStyle(.white)
+                    .frame(width: 40, height: 22)
+                    .background(RoundedRectangle(cornerRadius: 6, style: .continuous).fill(Theme.field))
+                    .onChange(of: minutesText) { applyCustom() }
+                Text("min").font(.system(size: 12, weight: .medium, design: .rounded)).foregroundStyle(Theme.dim)
+            }
+        }
+        .onAppear {
+            if !isPreset {
+                customOn = true
+                minutesText = "\(Int(interval / 60))"
+            }
+        }
+    }
+
+    private func applyCustom() {
+        let digits = minutesText.filter(\.isNumber)
+        if digits != minutesText { minutesText = digits; return }
+        if let m = Int(digits), (1...1440).contains(m) { interval = TimeInterval(m * 60) }
+    }
+
+    private func chip(_ label: String, selected: Bool, action: @escaping () -> Void) -> some View {
+        Button { withAnimation(.easeOut(duration: 0.15)) { action() } } label: {
+            Text(label)
+                .font(.system(size: 12, weight: .semibold, design: .rounded))
+                .padding(.horizontal, 9).padding(.vertical, 4)
+                .background(Capsule().fill(selected ? AnyShapeStyle(Theme.accent) : AnyShapeStyle(Theme.field)))
+                .foregroundStyle(selected ? .white : Theme.dim)
+        }
+        .buttonStyle(.plain)
     }
 }
 

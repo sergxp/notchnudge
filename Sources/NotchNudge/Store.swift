@@ -45,6 +45,19 @@ final class ReminderStore: ObservableObject {
         reminders.insert(Reminder(text: clean, interval: interval, nextFire: Date().addingTimeInterval(interval)), at: 0)
     }
 
+    func rename(_ id: UUID, to text: String) {
+        let clean = text.trimmingCharacters(in: .whitespacesAndNewlines)
+        guard let i = index(id), !clean.isEmpty else { return }
+        reminders[i].text = clean
+    }
+
+    /// New timing restarts the countdown from now.
+    func setInterval(_ id: UUID, _ interval: TimeInterval) {
+        guard let i = index(id), interval >= 60 else { return }
+        reminders[i].interval = interval
+        reminders[i].nextFire = Date().addingTimeInterval(interval)
+    }
+
     func delete(_ id: UUID) { reminders.removeAll { $0.id == id } }
 
     func togglePause(_ id: UUID) {
