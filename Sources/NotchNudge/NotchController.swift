@@ -36,6 +36,8 @@ final class NotchController: ObservableObject {
     @Published var peekProgress: Double = 0
     @Published private(set) var notchSize: CGSize = CGSize(width: 190, height: 32)
     @Published var focusToken = 0
+    /// Set while a reminder is being edited: Esc cancels the edit instead of closing the drawer.
+    var onEscape: (() -> Void)?
 
     let store: ReminderStore
     private var panel: NotchPanel!
@@ -99,7 +101,10 @@ final class NotchController: ObservableObject {
         }
         // Esc closes.
         NSEvent.addLocalMonitorForEvents(matching: .keyDown) { [weak self] e in
-            if e.keyCode == 53, let self, self.mode != .closed { self.close(); return nil }
+            if e.keyCode == 53, let self, self.mode != .closed {
+                if let cancelEdit = self.onEscape { self.onEscape = nil; cancelEdit() } else { self.close() }
+                return nil
+            }
             return e
         }
     }
@@ -183,6 +188,7 @@ final class NotchController: ObservableObject {
         panel.ignoresMouseEvents = (new == .closed)
         if new == .closed {
             sticky = false
+            onEscape = nil
             // Hand keyboard focus back to whatever app was in front.
             if wasKey {
                 DispatchQueue.main.asyncAfter(deadline: .now() + 0.4) { [weak self] in

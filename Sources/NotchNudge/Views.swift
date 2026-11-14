@@ -288,7 +288,7 @@ struct ReminderRow: View {
 
             HStack(spacing: 8) {
                 Spacer()
-                Button { withAnimation(.easeOut(duration: 0.15)) { editing = false } } label: {
+                Button(action: cancel) {
                     Text("Cancel").font(.system(size: 12, weight: .semibold, design: .rounded))
                         .padding(.horizontal, 14).padding(.vertical, 5)
                         .background(Capsule().fill(Theme.field))
@@ -308,7 +308,13 @@ struct ReminderRow: View {
         draftText = reminder.text
         draftInterval = reminder.interval
         withAnimation(.spring(response: 0.3, dampingFraction: 0.85)) { editing = true }
+        c.onEscape = { cancel() }
         DispatchQueue.main.asyncAfter(deadline: .now() + 0.1) { textFocused = true }
+    }
+
+    private func cancel() {
+        c.onEscape = nil
+        withAnimation(.easeOut(duration: 0.15)) { editing = false }
     }
 
     private func save() {
@@ -318,6 +324,7 @@ struct ReminderRow: View {
         if draftInterval != reminder.interval {
             store.setInterval(reminder.id, draftInterval)
         }
+        c.onEscape = nil
         withAnimation(.easeOut(duration: 0.15)) { editing = false }
     }
 
