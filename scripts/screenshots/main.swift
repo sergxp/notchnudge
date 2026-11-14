@@ -1,5 +1,5 @@
 // Renders the app's real SwiftUI views with sample data into PNGs for the README,
-// plus the 1024px app icon. Run via scripts/screenshots.sh. Never reads your real reminders.
+// plus the 1024px app icon. Run via `make screenshots`. Never reads your real reminders.
 import AppKit
 import SwiftUI
 

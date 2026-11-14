@@ -13,7 +13,7 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Build installer
-        run: ./scripts/package.sh "${GITHUB_REF_NAME#v}"
+        run: make dmg VERSION="${GITHUB_REF_NAME#v}"
       - name: Publish release files
         env:
           GH_TOKEN: ${{ github.token }}

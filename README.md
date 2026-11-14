@@ -79,15 +79,15 @@ Works on Macs without a notch too: it appears as a small black tab at the top ce
 >
 > You only have to do this once.
 
-### Option 2: One-line install (no warning)
+### Option 2: Homebrew (no warning)
 
-Paste this into Terminal. It downloads the latest version, puts it in Applications, and opens it:
+If you use [Homebrew](https://brew.sh), run:
 
 ```bash
-curl -fsSL https://raw.githubusercontent.com/sergxp/notchnudge/main/install.sh | bash
+brew install --cask sergxp/tap/notchnudge
 ```
 
-Run the same command again any time to update.
+Update later with `brew upgrade --cask notchnudge`. The recipe lives in [sergxp/homebrew-tap](https://github.com/sergxp/homebrew-tap) if you want to read it first.
 
 ### Start at login
 
@@ -134,7 +134,7 @@ Your reminders are saved in one file on your Mac:
 
 ## Uninstall
 
-Quit NotchNudge from the menu bar, then delete it from Applications. To also remove your reminders:
+Quit NotchNudge from the menu bar, then delete it from Applications (or run `brew uninstall --cask --zap notchnudge` if you used Homebrew). To also remove your reminders:
 
 ```bash
 rm -rf ~/Library/Application\ Support/NotchNudge
@@ -149,15 +149,14 @@ You only need the free Xcode Command Line Tools (`xcode-select --install`). No X
 ```bash
 git clone https://github.com/sergxp/notchnudge.git
 cd notchnudge
-./scripts/build.sh          # builds build/NotchNudge.app
-open build/NotchNudge.app
+make run                    # builds build/NotchNudge.app and opens it
 ```
 
-| Script | What it does |
+| Command | What it does |
 | --- | --- |
-| `scripts/build.sh` | Builds the app for Apple Silicon and Intel |
-| `scripts/package.sh` | Builds the `.dmg` installer and `.zip` in `dist/` |
-| `scripts/screenshots.sh` | Re-draws the README images and app icon from the real app screens |
+| `make` | Builds the app for Apple Silicon and Intel |
+| `make dmg` | Builds the `.dmg` installer and `.zip` in `dist/` |
+| `make screenshots` | Re-draws the README images and app icon from the real app screens |
 
 ### How it's built
 
@@ -181,13 +180,14 @@ flowchart TB
 - [ ] Signed and notarized builds (no first-launch warning)
 - [ ] Custom intervals and quiet hours
 - [ ] Reminders at a set time of day
-- [ ] Homebrew cask
+- [x] Homebrew cask
 
 Have an idea? [Open a feature request](https://github.com/sergxp/notchnudge/issues/new?template=feature_request.md).
 
 ## Contributing
 
 Bug reports and pull requests are welcome. See [CONTRIBUTING.md](CONTRIBUTING.md).
+Found a security problem? Please report it privately, see [SECURITY.md](SECURITY.md).
 
 ## License
 
