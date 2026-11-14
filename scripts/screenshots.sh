@@ -5,7 +5,7 @@ set -euo pipefail
 cd "$(dirname "$0")/.."
 source scripts/toolchain.sh
 mkdir -p .build
-swiftc -O -swift-version 5 -target "$(uname -m)-apple-macos14.0" "${OVERLAY[@]}" -o .build/snapshot \
+swiftc -O -swift-version 5 -target "$(uname -m)-apple-macos14.0" ${OVERLAY[@]+"${OVERLAY[@]}"} -o .build/snapshot \
   Sources/NotchNudge/Store.swift Sources/NotchNudge/NotchController.swift Sources/NotchNudge/Views.swift \
   scripts/screenshots/main.swift
 .build/snapshot docs/images

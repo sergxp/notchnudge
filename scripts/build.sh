@@ -8,7 +8,7 @@ source scripts/toolchain.sh
 
 mkdir -p .build
 for ARCH in arm64 x86_64; do
-  swiftc -O -swift-version 5 -target "$ARCH-apple-macos14.0" "${OVERLAY[@]}" \
+  swiftc -O -swift-version 5 -target "$ARCH-apple-macos14.0" ${OVERLAY[@]+"${OVERLAY[@]}"} \
     -o ".build/NotchNudge-$ARCH" Sources/NotchNudge/*.swift
 done
 lipo -create -output .build/NotchNudge .build/NotchNudge-arm64 .build/NotchNudge-x86_64
